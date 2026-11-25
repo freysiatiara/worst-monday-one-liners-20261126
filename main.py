@@ -53,6 +53,16 @@ def main():
     with open(path, "wb") as handle:
         handle.write(data)
     os.chmod(path, 0o644)
+    # Read-back guard: prove the file on disk is exactly what we wrote.
+    with open(path, "rb") as handle:
+        written = handle.read()
+    if written != data:
+        raise SystemExit("read-back mismatch: entry.txt differs from ENTRY")
+    decoded = written.decode("utf-8")
+    if decoded != text or "\n" in decoded or "\r" in decoded:
+        raise SystemExit("read-back mismatch: entry is not one clean line")
+    if any(ord(ch) < 0x20 for ch in decoded):
+        raise SystemExit("read-back mismatch: entry contains control chars")
     return 0
 
 
